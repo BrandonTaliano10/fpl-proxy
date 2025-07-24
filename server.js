@@ -1,9 +1,57 @@
-// Add these new endpoints to match our app's expectations
+const express = require('express');
+const cors = require('cors');
+const axios = require('axios');
+const app = express();
+const PORT = process.env.PORT || 3001;
 
-// Get manager info (matches /api/entry/:teamId/)
+app.use(cors());
+
+app.get('/', (req, res) => {
+  res.json({ message: 'FPL Proxy Server is running!' });
+});
+
+// Test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Test endpoint working!', timestamp: new Date() });
+});
+
+// Get bootstrap data (working)
+app.get('/api/bootstrap-static', async (req, res) => {
+  try {
+    const response = await axios.get(
+      'https://fantasy.premierleague.com/api/bootstrap-static/'
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching bootstrap data:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch bootstrap data',
+      details: error.message 
+    });
+  }
+});
+
+// Get bootstrap data with trailing slash (working)
+app.get('/api/bootstrap-static/', async (req, res) => {
+  try {
+    const response = await axios.get(
+      'https://fantasy.premierleague.com/api/bootstrap-static/'
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching bootstrap data:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch bootstrap data',
+      details: error.message 
+    });
+  }
+});
+
+// Get manager info (NEW)
 app.get('/api/entry/:id', async (req, res) => {
   try {
     const teamId = req.params.id;
+    console.log(`Fetching manager data for team ${teamId}`);
     const response = await axios.get(
       `https://fantasy.premierleague.com/api/entry/${teamId}/`
     );
@@ -17,10 +65,11 @@ app.get('/api/entry/:id', async (req, res) => {
   }
 });
 
-// Get manager history (matches /api/entry/:teamId/history/)
+// Get manager history (NEW)
 app.get('/api/entry/:id/history', async (req, res) => {
   try {
     const teamId = req.params.id;
+    console.log(`Fetching manager history for team ${teamId}`);
     const response = await axios.get(
       `https://fantasy.premierleague.com/api/entry/${teamId}/history/`
     );
@@ -34,10 +83,11 @@ app.get('/api/entry/:id/history', async (req, res) => {
   }
 });
 
-// Get league standings (matches /api/leagues-classic/:leagueId/standings/)
+// Get league standings (NEW)
 app.get('/api/leagues-classic/:id/standings', async (req, res) => {
   try {
     const leagueId = req.params.id;
+    console.log(`Fetching league standings for league ${leagueId}`);
     const response = await axios.get(
       `https://fantasy.premierleague.com/api/leagues-classic/${leagueId}/standings/`
     );
@@ -51,10 +101,11 @@ app.get('/api/leagues-classic/:id/standings', async (req, res) => {
   }
 });
 
-// Get team picks for gameweek (matches /api/entry/:teamId/event/:eventId/picks/)
+// Get team picks for gameweek (NEW)
 app.get('/api/entry/:id/event/:gw/picks', async (req, res) => {
   try {
     const { id, gw } = req.params;
+    console.log(`Fetching team picks for team ${id}, gameweek ${gw}`);
     const response = await axios.get(
       `https://fantasy.premierleague.com/api/entry/${id}/event/${gw}/picks/`
     );
@@ -68,17 +119,52 @@ app.get('/api/entry/:id/event/:gw/picks', async (req, res) => {
   }
 });
 
-// Fix bootstrap-static endpoint (add trailing slash)
-app.get('/api/bootstrap-static/', async (req, res) => {
+// Your existing league endpoint (keeping for compatibility)
+app.get('/api/league/:id', async (req, res) => {
   try {
+    const leagueId = req.params.id;
     const response = await axios.get(
-      'https://fantasy.premierleague.com/api/bootstrap-static/'
+      `https://fantasy.premierleague.com/api/leagues-classic/${leagueId}/standings/`
     );
     res.json(response.data);
   } catch (error) {
-    console.error('Error fetching bootstrap data:', error.message);
+    console.error('Error fetching league data:', error.message);
     res.status(500).json({ 
-      error: 'Failed to fetch bootstrap data',
+      error: 'Failed to fetch league standings',
+      details: error.message 
+    });
+  }
+});
+
+// Your existing team endpoint (keeping for compatibility)
+app.get('/api/team/:id', async (req, res) => {
+  try {
+    const teamId = req.params.id;
+    const response = await axios.get(
+      `https://fantasy.premierleague.com/api/entry/${teamId}/`
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching team data:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch team data',
+      details: error.message 
+    });
+  }
+});
+
+// Your existing team picks endpoint (keeping for compatibility)
+app.get('/api/team/:id/picks/:gw', async (req, res) => {
+  try {
+    const { id, gw } = req.params;
+    const response = await axios.get(
+      `https://fantasy.premierleague.com/api/entry/${id}/event/${gw}/picks/`
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching team picks:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to fetch team picks',
       details: error.message 
     });
   }
