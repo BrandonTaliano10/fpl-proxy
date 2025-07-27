@@ -170,6 +170,41 @@ app.get('/api/team/:id/picks/:gw', async (req, res) => {
   }
 });
 
+// Get all fixtures
+app.get('/api/fixtures', async (req, res) => {
+  try {
+    console.log('Fetching all fixtures');
+    const response = await axios.get(
+      'https://fantasy.premierleague.com/api/fixtures/'
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error('Error fetching fixtures:', error.message);
+    res.status(500).json({
+      error: 'Failed to fetch fixtures',
+      details: error.message
+    });
+  }
+});
+
+// Get fixtures for a specific gameweek
+app.get('/api/fixtures/event/:eventId', async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    console.log(`Fetching fixtures for gameweek ${eventId}`);
+    const response = await axios.get(
+      `https://fantasy.premierleague.com/api/fixtures/?event=${eventId}`
+    );
+    res.json(response.data);
+  } catch (error) {
+    console.error(`Error fetching fixtures for gameweek ${eventId}:`, error.message);
+    res.status(500).json({
+      error: `Failed to fetch fixtures for gameweek ${eventId}`,
+      details: error.message
+    });
+  }
+});
+
 app.listen(PORT, () => {
   console.log(`FPL Proxy Server running on port ${PORT}`);
 });
